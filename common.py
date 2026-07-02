@@ -1,19 +1,13 @@
 import random
+from curses import KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP
 from queue import Queue
 
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-def main(stdscr):
-    # inside loop
-    # create maze
-    # draw maze
-    # listen for keys to move character inside maze
-    # move character according to key
-    # listen for boundaries
-    pass
+MOVT_CHARS = {KEY_UP: (-1, 0), KEY_DOWN: (1, 0), KEY_LEFT: (0, -1), KEY_RIGHT: (0, 1)}
+START_COORD = (0, 0)
 
 
 def make_maze(dim):
@@ -41,19 +35,45 @@ def make_maze(dim):
     return maze
 
 
-def draw_maze_to_terminal(stdscr, dimension):
+def draw_maze_and_player_to_terminal(stdscr, dimension):
     maze = make_maze(dimension)
+    height, width = stdscr.getmaxyx()
+    stdscr.clear()
+    for y, v in enumerate(maze):
+        for x, vv in enumerate(v):
+            if y < height - 1 and x < width - 1:
+                stdscr.addstr(y, x, " " if vv == 0 else "-")
+    stdscr.refresh()
+    curr_pos = START_COORD
+    stdscr.addch(*curr_pos, "@")
     while True:
-        height, width = stdscr.getmaxyx()
-        stdscr.clear()
-        for y, v in enumerate(maze):
-            for x, vv in enumerate(v):
-                if y < height - 1 and x < width - 1:
-                    stdscr.addstr(y, x, " " if vv == 0 else "-")
-        stdscr.refresh()
         key = stdscr.getch()
         if key == ord("q"):
             break
+        if key in MOVT_CHARS:
+            y, x = get_new_position(curr_pos, MOVT_CHARS[key])
+            if maze[y][x] == 0:
+                stdscr.addch(*curr_pos, " ")
+                stdscr.addch(y, x, "@")
+                curr_pos = y, x
+                stdscr.refresh()
+
+def get_new_position(a, b):
+    return a[0] + b[0], a[1] + b[1]
+
+
+def walk_in_maze(stdscr, key, maze):
+    # place player char at start_coords
+    # listen to keys and draw player in new coords if valid, clearing the old coords.
+    curr_pos = START_COORD
+    stdscr.addch(*curr_pos, "@")
+    if key in MOVT_CHARS:
+        y, x = get_new_position(curr_pos, MOVT_CHARS[key])
+        if maze[y][x] == 0:
+            stdscr.addch(*curr_pos, " ")
+            stdscr.addch(y, x, "@")
+            curr_pos = y, x
+            stdscr.refresh()
 
 
 def solve_maze(maze):
