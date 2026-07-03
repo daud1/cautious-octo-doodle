@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 MOVT_CHARS = {KEY_UP: (-1, 0), KEY_DOWN: (1, 0), KEY_LEFT: (0, -1), KEY_RIGHT: (0, 1)}
-START_COORD = (0, 0)
 
 
 def make_maze(dim):
@@ -38,13 +37,15 @@ def make_maze(dim):
 def draw_maze_and_player_to_terminal(stdscr, dimension):
     maze = make_maze(dimension)
     height, width = stdscr.getmaxyx()
+    start_x = int((width - (2 * dimension + 1)) / 2)
     stdscr.clear()
     for y, v in enumerate(maze):
         for x, vv in enumerate(v):
+            x += start_x
             if y < height - 1 and x < width - 1:
                 stdscr.addstr(y, x, " " if vv == 0 else "-")
     stdscr.refresh()
-    curr_pos = START_COORD
+    curr_pos = 1, start_x
     stdscr.addch(*curr_pos, "@")
     while True:
         key = stdscr.getch()
@@ -52,12 +53,14 @@ def draw_maze_and_player_to_terminal(stdscr, dimension):
             break
         if key in MOVT_CHARS:
             y, x = get_new_position(curr_pos, MOVT_CHARS[key])
-            if maze[y][x] == 0:
+            if maze[y][x - start_x] == 0:
                 stdscr.addch(*curr_pos, " ")
                 stdscr.addch(y, x, "@")
                 curr_pos = y, x
                 stdscr.refresh()
 
+
+# draw in the middle: subtract width of maze (2x+1) from width of screen and that should be the starting x coord
 def get_new_position(a, b):
     return a[0] + b[0], a[1] + b[1]
 
