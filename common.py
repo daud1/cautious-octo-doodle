@@ -1,5 +1,17 @@
 import random
-from curses import KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP
+from curses import (
+    A_BLINK,
+    COLOR_BLACK,
+    COLOR_GREEN,
+    COLOR_RED,
+    KEY_DOWN,
+    KEY_LEFT,
+    KEY_RIGHT,
+    KEY_UP,
+    color_pair,
+    init_pair,
+    start_color,
+)
 from queue import Queue
 
 import matplotlib.animation as animation
@@ -35,9 +47,17 @@ def make_maze(dim):
 
 
 def draw_maze_and_player_to_terminal(stdscr, dimension):
-    maze = make_maze(dimension)
+    start_color()
+    init_pair(1, COLOR_GREEN, COLOR_BLACK)
+    init_pair(2, COLOR_RED, COLOR_BLACK)
+
+    # draw maze and help text in the middle bounded by window size
     height, width = stdscr.getmaxyx()
+    max_dimension = max(1, min((height - 4) // 2, (width - 2) // 2))
+    dimension = min(dimension, max_dimension)
     start_x = int((width - (2 * dimension + 1)) / 2)
+
+    maze = make_maze(dimension)
     stdscr.clear()
     for y, v in enumerate(maze):
         for x, vv in enumerate(v):
@@ -45,22 +65,29 @@ def draw_maze_and_player_to_terminal(stdscr, dimension):
             if y < height - 1 and x < width - 1:
                 stdscr.addstr(y, x, " " if vv == 0 else "-")
     stdscr.refresh()
+    stdscr.addstr(maze.shape[0] + 2, start_x, "Press q to quit", color_pair(2))
+
+    # move in maze
     curr_pos = 1, start_x
-    stdscr.addch(*curr_pos, "@")
+    stdscr.addch(*curr_pos, "@", color_pair(1))
     while True:
         key = stdscr.getch()
         if key == ord("q"):
             break
         if key in MOVT_CHARS:
             y, x = get_new_position(curr_pos, MOVT_CHARS[key])
-            if maze[y][x - start_x] == 0:
-                stdscr.addch(*curr_pos, " ")
-                stdscr.addch(y, x, "@")
-                curr_pos = y, x
-                stdscr.refresh()
+            try:
+                if maze[y][x - start_x] == 0:
+                    stdscr.addch(*curr_pos, " ")
+                    stdscr.addch(y, x, "@")
+                    curr_pos = y, x
+                    stdscr.refresh()
+            except IndexError:
+                win_message = "You Win!!"
+                stdscr.clear()
+                stdscr.addstr(height // 2, start_x, win_message, color_pair(1) | A_BLINK)
 
 
-# draw in the middle: subtract width of maze (2x+1) from width of screen and that should be the starting x coord
 def get_new_position(a, b):
     return a[0] + b[0], a[1] + b[1]
 
@@ -68,7 +95,7 @@ def get_new_position(a, b):
 def walk_in_maze(stdscr, key, maze):
     # place player char at start_coords
     # listen to keys and draw player in new coords if valid, clearing the old coords.
-    curr_pos = START_COORD
+    curr_pos = (0, 0)
     stdscr.addch(*curr_pos, "@")
     if key in MOVT_CHARS:
         y, x = get_new_position(curr_pos, MOVT_CHARS[key])
