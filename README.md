@@ -1,5 +1,6 @@
-A tiny maze game written with Python's Curses library.
-Install dependencies and run with the command below:
+A tiny maze game written with Python's Curses library.  
+
+Install dependencies with `uv` or `pip` and run with the command below:
 
 ``` py
 python main.py
