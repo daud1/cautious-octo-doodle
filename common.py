@@ -79,7 +79,7 @@ def draw_maze_and_player_to_terminal(stdscr, dimension):
             try:
                 if maze[y][x - start_x] == 0:
                     stdscr.addch(*curr_pos, " ")
-                    stdscr.addch(y, x, "@")
+                    stdscr.addch(y, x, "@", color_pair(1))
                     curr_pos = y, x
                     stdscr.refresh()
             except IndexError:
